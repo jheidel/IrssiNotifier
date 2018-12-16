@@ -60,6 +60,18 @@
                     android:summary="Select the sound to play when notifying"
                     android:title="Select notification sound"
                     android:dependency="SoundEnabled" />
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:key="TTSEnabled"
+                    android:summary="Messages will be read aloud"
+                    android:title="Enable TTS"
+                    android:dependency="SoundEnabled"/>
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:key="TTSOnAlarm"
+                    android:summary="TTS Messages will be read on the alarm audio channel"
+                    android:title="TTS on Alarm Channel"
+                    android:dependency="TTSEnabled"/>
             </PreferenceCategory>
             <PreferenceCategory android:title="Vibration" >
                 <CheckBoxPreference

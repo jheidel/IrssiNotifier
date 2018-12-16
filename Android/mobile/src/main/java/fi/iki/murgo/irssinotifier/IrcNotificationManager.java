@@ -7,8 +7,13 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import android.media.AudioManager;
+import android.os.Handler;
+import android.os.Looper;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -39,6 +44,7 @@ public class IrcNotificationManager {
     private int perMessageNotificationId = 2;
     private long lastSoundDate = 0;
     private DataAccess da;
+    private TextToSpeech textToSpeech;
 
     public long getLastSoundDate() {
         return lastSoundDate;
@@ -206,6 +212,15 @@ public class IrcNotificationManager {
                 Log.e(TAG, "Exception while notifying pebble", e);
             }
         }
+
+        if (prefs.isTTSEnabled()) {
+            try {
+                notifyTTS(context, msg, prefs.isTTSOnAlarm());
+            } catch (Exception e) {
+                // don't crash from pebble notifications
+                Log.e(TAG, "Exception during tts notification", e);
+            }
+        }
     }
 
     private void notifyPebble(Context context, IrcMessage msg) {
@@ -223,6 +238,43 @@ public class IrcNotificationManager {
         pebbleIntent.putExtra("notificationData", notificationData);
 
         context.sendBroadcast(pebbleIntent);
+    }
+
+    private void notifyTTS(Context context, IrcMessage msg, boolean alarm) {
+        if (textToSpeech == null) {
+            textToSpeech = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
+                @Override
+                public void onInit(int status) {
+                    if (status == TextToSpeech.SUCCESS) {
+                        int ttsLang = textToSpeech.setLanguage(Locale.US);
+
+                        if (ttsLang == TextToSpeech.LANG_MISSING_DATA
+                                || ttsLang == TextToSpeech.LANG_NOT_SUPPORTED) {
+                            Log.e("TTS", "The Language is not supported!");
+                        } else {
+                            Log.i("TTS", "Language Supported.");
+                        }
+                        Log.i("TTS", "Initialization success.");
+                    }
+                }
+            });
+        }
+
+        final String ttsText = "New message on channel " + msg.getChannel() + ". Message reads. " + msg.getMessage();
+        final boolean useAlarm = alarm;
+
+        // Read notification after a short delay (allows the notification sound to play without being interrupted).
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                HashMap<String, String> map = new HashMap<>();
+                if (useAlarm) {
+                    map.put(TextToSpeech.Engine.KEY_PARAM_STREAM, "ALARM");
+                }
+                textToSpeech.speak(ttsText, TextToSpeech.QUEUE_FLUSH, map);
+            }
+        }, 1500);
     }
 
     public boolean mainActivityOpened(Context context) {

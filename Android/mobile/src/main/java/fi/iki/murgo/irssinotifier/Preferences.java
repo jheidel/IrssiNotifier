@@ -48,6 +48,8 @@ public class Preferences {
     private static final String LICENSE_COUNT = "LicenseCount";
     private static final String USE_PULL_MECHANISM = "UsePullMechanism";
     private static final String PEBBLE_ENABLED = "PebbleEnabled";
+    private static final String TTS_ENABLED = "TTSEnabled";
+    private static final String TTS_ALARM = "TTSOnAlarm";
 
     private SharedPreferences sharedPreferences;
     private static int versionCode;
@@ -254,5 +256,13 @@ public class Preferences {
 
     public boolean isPebbleEnabled() {
         return sharedPreferences.getBoolean(PEBBLE_ENABLED, false);
+    }
+
+    public boolean isTTSEnabled() {
+        return sharedPreferences.getBoolean(TTS_ENABLED, false);
+    }
+
+    public boolean isTTSOnAlarm() {
+        return sharedPreferences.getBoolean(TTS_ALARM, false);
     }
 }
